@@ -58,7 +58,7 @@ export function weeklySurprise(date = new Date()) {
 }
 export const weeklyById = (id) => WEEKLY.find((w) => w.id === id);
 
-export const AVATARS = ['🦊', '🐸', '🐻', '🐼', '🐨', '🦁', '🐯', '🐷', '🐵', '🦄', '🐙', '🦖', '🐔', '🦉', '🐧', '🐢', '🦥', '🐌', '👽', '🤖', '👻', '🤠', '🥷', '🧛'];
+export const AVATARS = ['🦊', '🐸', '🐻', '🐼', '🐨', '🦁', '🐯', '🐷', '🐵', '🦄', '🐙', '🦀', '🦖', '🐔', '🦉', '🐧', '🐢', '🦥', '🐌', '👽', '🤖', '👻', '🤠', '🥷', '🧛'];
 
 export const REACTIONS = ['😂', '😡', '🫡', '💀', '❤️', '🥱'];
 

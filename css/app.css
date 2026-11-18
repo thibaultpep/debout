@@ -122,7 +122,7 @@ textarea.field { resize: none; }
 .onb-sub { font-size: 21px; font-weight: 600; margin-top: 22px; max-width: 26ch; }
 .onb-form { display: flex; flex-direction: column; gap: 10px; }
 .invite-note { background: var(--yolk); border: var(--line); border-radius: 16px; padding: 12px 14px; font-weight: 600; }
-.avatars { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.avatars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .avatar-pick {
   aspect-ratio: 1; font-size: 26px; border: 2px solid transparent; border-radius: 14px; background: rgba(255, 255, 255, .55); cursor: pointer;
 }
