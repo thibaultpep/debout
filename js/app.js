@@ -430,7 +430,9 @@ function memberRow(m) {
 
 function viewReveils() {
   const st = S.state;
-  const nxt = nextOccs()[0];
+  // les réveils surprise restent secrets : on ne montre ni l'heure ni l'auteur
+  const nxt = nextOccs().filter((o) => o.kind !== 'surprise')[0];
+  const surprise = nextOccs().some((o) => o.kind === 'surprise');
   const out = [];
   out.push(h('section', { class: 'sleep-card' },
     h('div', {},
@@ -442,10 +444,12 @@ function viewReveils() {
     const traps = nxt.wakeups.filter((w) => w.kind === 'trap').length;
     out.push(h('p', { class: 'next' },
       'Prochaine sonnerie : ', h('strong', {}, whenLabel(nxt.fireAt)),
-      nxt.kind === 'surprise' ? ' (réveil surprise d\'un pote 📣)' : '',
       traps ? h('span', { class: 'teaser' }, ` 🤫 ${traps > 1 ? `${traps} potes ont` : 'un pote a'} piégé ce réveil`) : null));
   }
 
+  if (surprise) {
+    out.push(h('p', { class: 'next' }, h('span', { class: 'teaser' }, '📣 Un pote t\'a programmé un réveil surprise. Tu ne sauras ni quand, ni qui 😈')));
+  }
   if (!st.alarms.length) {
     out.push(h('section', { class: 'empty' },
       h('h2', {}, 'Aucun réveil'),
@@ -892,7 +896,7 @@ function sheetCompose(m) {
       const dayNames = ['Aujourd\'hui', 'Demain', 'Après-demain'];
       const t = h('input', { type: 'time', class: 'field time-field small', value: c.sTime, 'aria-label': 'Heure du réveil surprise', oninput: (e) => { c.sTime = e.target.value; } });
       whenBox.replaceChildren(
-        h('p', { class: 'hint' }, `Son téléphone sonnera à l'heure que tu choisis, même s'il n'a pas mis de réveil. ${m.pseudo} ne sera pas prévenu avant.`),
+        h('p', { class: 'hint' }, `Son téléphone sonnera à l'heure que tu choisis, même s'il n'a pas mis de réveil. ${m.pseudo} saura qu'une surprise l'attend, mais ni l'heure ni de qui.`),
         h('div', { class: 'chips' }, dayNames.map((n, i) => h('button', {
           type: 'button', class: `chip${c.sDay === i ? ' on' : ''}`, onclick: () => { c.sDay = i; drawWhen(); },
         }, n))), t);
@@ -1023,7 +1027,8 @@ function exitSleep() {
 }
 
 function renderSleep() {
-  const nxt = nextOccs()[0];
+  const nxt = nextOccs().filter((o) => o.kind !== 'surprise')[0];
+  const surprise = nextOccs().some((o) => o.kind === 'surprise');
   const holdBtn = h('button', { class: 'sleep-exit' }, 'Maintenir pour sortir');
   let holdT;
   holdBtn.addEventListener('pointerdown', () => { holdBtn.classList.add('holding'); holdT = setTimeout(exitSleep, 1200); });
@@ -1033,8 +1038,9 @@ function renderSleep() {
     h('div', { class: 'sleep-inner' },
       h('p', { class: 'sleep-clock' }, hhmm(new Date())),
       h('p', { class: 'sleep-next' }, nxt
-        ? `Réveil ${whenLabel(nxt.fireAt)}${traps ? (nxt.kind === 'surprise' ? ' · réveil surprise 📣' : ' · piégé 🤫') : ''}`
+        ? `Réveil ${whenLabel(nxt.fireAt)}${traps ? ' (piégé 🤫)' : ''}`
         : 'Aucun réveil prévu. Tes potes peuvent encore t\'envoyer un réveil surprise.'),
+      surprise ? h('p', { class: 'sleep-next' }, '📣 Et un réveil surprise t\'attend…') : null,
       h('p', { class: 'sleep-tip' }, sleepHow === 'none'
         ? '⚠️ Ce téléphone risque de se verrouiller tout seul. Règle le verrouillage automatique sur « Jamais » pour cette nuit.'
         : 'Laisse le téléphone branché, écran allumé, et ne quitte pas l\'appli. Le volume des médias doit être monté.')),

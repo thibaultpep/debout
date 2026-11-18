@@ -1,5 +1,5 @@
 // Debout ! — service worker : appli dispo hors ligne + notifications de réveil.
-const VERSION = 'debout-v6';
+const VERSION = 'debout-v7';
 const SOUNDS = ['classique', 'sirene', 'klaxon', 'fanfare', 'ecole', 'chiptune', 'recul', 'coucou', 'laser', 'sonar', 'gong',
   'carillon', 'decollage', 'disco', 'kazoo', 'alerte', 'stade', 'tambours', 'microondes', 'boite', 'silence'];
 const SHELL = [
