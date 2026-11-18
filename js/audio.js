@@ -93,6 +93,7 @@ export function stopPreview() { clearTimeout(previewTimer); preview.pause(); }
 let vibTimer;
 export function startVibrate() {
   if (!navigator.vibrate) return;
+  clearInterval(vibTimer); // jamais deux boucles de vibration en même temps
   const go = () => navigator.vibrate([700, 300, 700, 300, 700]);
   go();
   vibTimer = setInterval(go, 3200);

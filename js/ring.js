@@ -92,7 +92,7 @@ export function showRing(occ, ctx) {
     head.querySelector('.ring-title').textContent = 'Bien joué';
     head.querySelector('.ring-from').textContent = `Levé en ${duration(seconds)}${snoozes ? `, après ${snoozes} snooze${snoozes > 1 ? 's' : ''}` : ''}.`;
     msgs.remove();
-    zone.replaceChildren(
+    zone.replaceChildren(...[
       who.length ? h('div', { class: 'react' },
         h('p', {}, who.length > 1 ? 'Réponds à tes réveilleurs :' : `Réponds à ${who[0].pseudo} :`),
         who.map((s) => h('div', { class: 'react-row' },
@@ -107,7 +107,7 @@ export function showRing(occ, ctx) {
         )),
       ) : null,
       h('button', { class: 'btn btn-wake', onclick: close }, 'Fermer'),
-    );
+    ].filter(Boolean));
   }
 
   if (ctx.needsTap) {
