@@ -257,6 +257,8 @@ function handleRingParam(key) {
 // Onboarding
 
 function renderOnboarding() {
+  const tok = store.get('pendingToken') || randomToken();
+  store.set('pendingToken', tok);
   let emoji = AVATARS[Math.floor(Math.random() * AVATARS.length)];
   const invite = store.get('invite');
   const pseudo = h('input', { class: 'field', maxlength: 24, placeholder: 'Ton surnom', autocomplete: 'nickname', 'aria-label': 'Ton surnom' });
@@ -274,13 +276,14 @@ function renderOnboarding() {
       if (!p) { pseudo.focus(); toast('Choisis un surnom pour que tes potes te reconnaissent', 'err'); return; }
       if (!pass.value.trim()) { pass.focus(); toast('Il faut le mot de passe d\'accès. Demande-le au pote qui t\'a invité.', 'err'); return; }
       go.disabled = true;
-      const tok = randomToken();
+      go.textContent = 'Création du compte…';
       try {
         await api.register(tok, p, emoji, pass.value.trim());
         store.set('token', tok);
+        store.del('pendingToken');
         S.tab = 'potes';
         await startSession();
-      } catch (err) { toast(err.message, 'err'); go.disabled = false; }
+      } catch (err) { toast(err.message, 'err'); go.disabled = false; go.textContent = "C'est parti"; }
     },
   }, h('label', { class: 'lbl' }, 'Comment tes potes t\'appellent ?'), pseudo,
   h('label', { class: 'lbl' }, 'Ta tête au réveil'), grid,

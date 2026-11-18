@@ -26,19 +26,28 @@ export class ApiError extends Error {
 
 export const token = () => store.get('token');
 
-export async function rpc(fn, args = {}, { auth = true } = {}) {
+export async function rpc(fn, args = {}, { auth = true, timeoutMs = 15000 } = {}) {
   const body = auth ? { p_token: token(), ...args } : args;
-  let r;
+  let r, text;
+  // sans réponse au bout de 15 s, on abandonne plutôt que de rester bloqué
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     r = await fetch(`${CONFIG.supabaseUrl}/rest/v1/rpc/${fn}`, {
       method: 'POST',
       headers: { apikey: CONFIG.supabaseKey, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: ctrl.signal,
+      cache: 'no-store',
     });
-  } catch {
-    throw new ApiError('OFFLINE', 'Pas de connexion. Réessaie dans un instant.');
+    text = await r.text();
+  } catch (e) {
+    throw new ApiError('OFFLINE', e && e.name === 'AbortError'
+      ? 'Le serveur ne répond pas. Vérifie ta connexion (wifi ou 4G) et réessaie.'
+      : 'Pas de connexion. Réessaie dans un instant.');
+  } finally {
+    clearTimeout(timer);
   }
-  const text = await r.text();
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch { data = text; }
   if (!r.ok) {
