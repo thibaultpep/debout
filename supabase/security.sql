@@ -41,7 +41,7 @@ drop function if exists public.register(text, text, text);
 
 create or replace function public.register(p_token text, p_pseudo text, p_emoji text, p_password text)
 returns jsonb language plpgsql security definer set search_path = public, extensions as $$
-declare v uuid; ip text := _client_ip(); h text;
+declare v uuid; ip text := _client_ip(); h text; b bands;
 begin
   if p_token is null or char_length(p_token) < 32 then
     raise exception 'AUTH';
@@ -56,8 +56,10 @@ begin
   if _too_many('signup', ip, 8) or _too_many('signup', '*', 200) then
     return jsonb_build_object('error', 'TOO_MANY_TRIES');
   end if;
+  -- accepté : le mot de passe d'accès OU le code d'une bande existante (lien d'invitation)
   select value into h from app_secrets where name = 'signup_password_hash';
-  if h is null or p_password is null or crypt(p_password, h) <> h then
+  select * into b from bands where code = upper(trim(coalesce(p_password, '')));
+  if b.id is null and (h is null or p_password is null or crypt(p_password, h) <> h) then
     -- pas d'exception ici : elle annulerait l'enregistrement de l'essai raté
     insert into attempts(kind, who) values ('signup', ip), ('signup', '*');
     return jsonb_build_object('error', 'BAD_PASSWORD');
@@ -65,6 +67,10 @@ begin
   insert into users(token_hash, pseudo, emoji)
   values (_hash(p_token), left(trim(p_pseudo), 24), coalesce(nullif(p_emoji,''), '😴'))
   returning id into v;
+  if b.id is not null and (select count(*) from band_members where band_id = b.id) < 30 then
+    insert into band_members(band_id, user_id) values (b.id, v);
+    insert into events(actor_id, type, data) values (v, 'joined', jsonb_build_object('band', b.name, 'band_id', b.id));
+  end if;
   return _user_json(v);
 end $$;
 

@@ -27,7 +27,7 @@ C'est une appli web installable (PWA). Elle marche pareil sur iPhone et sur Andr
 
 ## Sécurité
 
-- Pour créer un compte, il faut le **mot de passe d'accès** commun. Il n'est pas dans ce dépôt : seule son empreinte bcrypt est stockée dans la base.
+- Pour créer un compte, il faut un lien d'invitation (code de bande) ou le mot de passe d'accès. Le mot de passe n'est pas dans ce dépôt : seule son empreinte bcrypt est stockée dans la base.
 - Les essais sont limités : 8 mots de passe ratés par heure et par connexion, 10 codes de bande ratés par heure et par compte.
 - Les tables ne sont pas accessibles directement. Tout passe par des fonctions qui vérifient le jeton secret du joueur et son appartenance à la bande.
 - Le créateur d'une bande peut exclure un membre et changer le code d'invitation.

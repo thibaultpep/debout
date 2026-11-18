@@ -262,7 +262,7 @@ function renderOnboarding() {
   let emoji = AVATARS[Math.floor(Math.random() * AVATARS.length)];
   const invite = store.get('invite');
   const pseudo = h('input', { class: 'field', maxlength: 24, placeholder: 'Ton surnom', autocomplete: 'nickname', 'aria-label': 'Ton surnom' });
-  const pass = h('input', { class: 'field', type: 'password', placeholder: 'Mot de passe d\'accès', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': 'Mot de passe d\'accès' });
+  const pass = h('input', { class: 'field', placeholder: 'Code de bande ou mot de passe', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': 'Code d\'accès' });
   const grid = h('div', { class: 'avatars' }, AVATARS.map((a) => h('button', {
     type: 'button', class: `avatar-pick${a === emoji ? ' on' : ''}`, 'aria-label': `Avatar ${a}`,
     onclick: (e) => { emoji = a; grid.querySelectorAll('.on').forEach((x) => x.classList.remove('on')); e.currentTarget.classList.add('on'); },
@@ -274,11 +274,12 @@ function renderOnboarding() {
       e.preventDefault();
       const p = pseudo.value.trim();
       if (!p) { pseudo.focus(); toast('Choisis un surnom pour que tes potes te reconnaissent', 'err'); return; }
-      if (!pass.value.trim()) { pass.focus(); toast('Il faut le mot de passe d\'accès. Demande-le au pote qui t\'a invité.', 'err'); return; }
+      const access = invite || pass.value.trim();
+      if (!access) { pass.focus(); toast('Il faut le lien d\'invitation ou un code. Demande-le au pote qui t\'a invité.', 'err'); return; }
       go.disabled = true;
       go.textContent = 'Création du compte…';
       try {
-        await api.register(tok, p, emoji, pass.value.trim());
+        await api.register(tok, p, emoji, access);
         store.set('token', tok);
         store.del('pendingToken');
         S.tab = 'potes';
@@ -287,15 +288,16 @@ function renderOnboarding() {
     },
   }, h('label', { class: 'lbl' }, 'Comment tes potes t\'appellent ?'), pseudo,
   h('label', { class: 'lbl' }, 'Ta tête au réveil'), grid,
-  h('label', { class: 'lbl' }, 'Mot de passe d\'accès'), pass,
-  h('p', { class: 'hint' }, 'Debout ! est réservé à notre bande. Le pote qui t\'a invité te donne le mot de passe.'),
+  invite ? null : h('label', { class: 'lbl' }, 'Ton code d\'accès'),
+  invite ? null : pass,
+  invite ? null : h('p', { class: 'hint' }, 'Debout ! est réservé aux invités. Ouvre le lien envoyé par ton pote, ou tape le code de sa bande (6 caractères).'),
   go);
 
   app.replaceChildren(h('main', { class: 'onb' },
     h('div', { class: 'onb-hero' },
       h('h1', { class: 'wordmark' }, 'Debout !'),
       h('p', { class: 'onb-sub' }, 'Le réveil entre potes. Ce sont eux qui choisissent avec quoi tu te lèves.')),
-    invite ? h('p', { class: 'invite-note' }, `🎉 Tu es invité dans une bande (code ${invite}). Crée ton profil pour la rejoindre.`) : null,
+    invite ? h('p', { class: 'invite-note' }, `🎉 Tu es invité dans une bande (code ${invite}). Choisis ton surnom et ta tête, c'est tout.`) : null,
     form,
     h('button', { class: 'link', onclick: renderRestore }, "J'ai déjà un compte sur un autre téléphone"),
   ));
@@ -738,7 +740,7 @@ function sheetInvite(b) {
   const text = `Rejoins ma bande « ${b.name} » sur Debout ! On se piège nos réveils entre potes 😈`;
   openSheet(`Inviter dans ${b.name}`, h('div', { class: 'stack' },
     h('p', {}, 'Envoie ce lien à tes potes (WhatsApp, SMS…). Ils l\'ouvrent, choisissent un surnom, et ils sont dans la bande. Ça marche sur iPhone comme sur Android.'),
-    h('p', { class: 'hint' }, 'Ils auront aussi besoin du mot de passe d\'accès. Donne-le à part, pas dans le même message que le lien.'),
+    h('p', { class: 'hint' }, 'Le lien suffit : pas besoin de mot de passe. Ne l\'envoie qu\'à tes potes. S\'il circule trop, change le code avec « Gérer ».'),
     h('p', { class: 'big-code', 'aria-label': `Code ${b.code.split('').join(' ')}` }, b.code),
     navigator.share
       ? h('button', { class: 'btn btn-main btn-block', onclick: () => navigator.share({ title: 'Debout !', text, url: link }).catch(() => {}) }, 'Partager le lien')

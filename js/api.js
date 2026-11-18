@@ -15,7 +15,7 @@ const ERRORS = {
   ALARM_NOT_FOUND: "Ce réveil n'existe plus, ton pote l'a modifié.",
   BAD_OCCURRENCE: "Ce réveil a changé d'heure entre-temps. Rafraîchis et recommence.",
   NOT_FOUND: 'Élément introuvable.',
-  BAD_PASSWORD: 'Mot de passe incorrect. Demande-le au pote qui t\'a invité.',
+  BAD_PASSWORD: 'Code incorrect. Demande le lien d\'invitation au pote qui t\'a invité.',
   TOO_MANY_TRIES: 'Trop d\'essais ratés. Réessaie dans une heure.',
   NOT_OWNER: 'Seul le responsable de la bande peut faire ça.',
 };
