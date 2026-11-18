@@ -37,6 +37,11 @@ http.createServer(async (req, res) => {
     }
     return;
   }
+  if (url.pathname === '/js/config.js') {
+    res.writeHead(200, { 'Content-Type': 'text/javascript', 'Cache-Control': 'no-store' });
+    res.end(`export const CONFIG = { supabaseUrl: 'http://localhost:${PORT}', supabaseKey: 'local-dev', vapidPublic: '' };`);
+    return;
+  }
   let p = path.join(ROOT, decodeURIComponent(url.pathname));
   if (!p.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }
   if (fs.existsSync(p) && fs.statSync(p).isDirectory()) p = path.join(p, 'index.html');

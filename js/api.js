@@ -15,6 +15,9 @@ const ERRORS = {
   ALARM_NOT_FOUND: "Ce réveil n'existe plus, ton pote l'a modifié.",
   BAD_OCCURRENCE: "Ce réveil a changé d'heure entre-temps. Rafraîchis et recommence.",
   NOT_FOUND: 'Élément introuvable.',
+  BAD_PASSWORD: 'Mot de passe incorrect. Demande-le au pote qui t\'a invité.',
+  TOO_MANY_TRIES: 'Trop d\'essais ratés. Réessaie dans une heure.',
+  NOT_OWNER: 'Seul le responsable de la bande peut faire ça.',
 };
 
 export class ApiError extends Error {
@@ -42,17 +45,23 @@ export async function rpc(fn, args = {}, { auth = true } = {}) {
     const code = (data && (data.message || data.error)) || `HTTP_${r.status}`;
     throw new ApiError(code, ERRORS[code] || `Le serveur a refusé la demande (${code}).`);
   }
+  // certaines fonctions renvoient { error } au lieu d'échouer (pour garder la trace des essais)
+  if (data && typeof data === 'object' && !Array.isArray(data) && typeof data.error === 'string' && Object.keys(data).length === 1) {
+    throw new ApiError(data.error, ERRORS[data.error] || `Le serveur a refusé la demande (${data.error}).`);
+  }
   return data;
 }
 
 export const api = {
-  register: (tok, pseudo, emoji) => rpc('register', { p_token: tok, p_pseudo: pseudo, p_emoji: emoji }, { auth: false }),
+  register: (tok, pseudo, emoji, password) => rpc('register', { p_token: tok, p_pseudo: pseudo, p_emoji: emoji, p_password: password }, { auth: false }),
   whoami: (tok) => rpc('whoami', { p_token: tok }, { auth: false }),
   updateProfile: (pseudo, emoji) => rpc('update_profile', { p_pseudo: pseudo, p_emoji: emoji }),
   deleteAccount: () => rpc('delete_account'),
   createBand: (name) => rpc('create_band', { p_name: name }),
   joinBand: (code) => rpc('join_band', { p_code: code }),
   leaveBand: (id) => rpc('leave_band', { p_band_id: id }),
+  kick: (bandId, userId) => rpc('kick_member', { p_band_id: bandId, p_user: userId }),
+  newCode: (bandId) => rpc('new_band_code', { p_band_id: bandId }),
   saveAlarm: (a) => rpc('save_alarm', {
     p_id: a.id || null, p_time: a.time, p_days: a.days, p_enabled: a.enabled !== false,
     p_label: a.label || '', p_sound: a.sound, p_challenge: a.challenge, p_tz: a.tz,

@@ -1,0 +1,50 @@
+"""Test sécurité : mot de passe d'accès, gestion de bande (exclure, changer le code)."""
+import sys
+from playwright.sync_api import sync_playwright, expect
+PW = open('/home/claude/debout-secrets/password.txt').read().strip()
+BASE = "http://localhost:8787/"
+errors = []
+with sync_playwright() as p:
+    b = p.chromium.launch(executable_path="/usr/bin/google-chrome")
+    dev = dict(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, locale="fr-FR", timezone_id="Europe/Paris")
+    A = b.new_context(**dev).new_page(); B = b.new_context(**dev).new_page()
+    for pg, n in ((A, 'A'), (B, 'B')):
+        pg.on("pageerror", lambda e, n=n: errors.append(f"[{n}] {e}"))
+    A.goto(BASE)
+    A.fill("input[aria-label='Ton surnom']", "Chef")
+    A.fill("input[aria-label=\"Mot de passe d'accès\"]", "pas-le-bon")
+    A.click("text=C'est parti")
+    expect(A.locator(".toast")).to_contain_text("Mot de passe incorrect")
+    A.screenshot(path="/tmp/shots/s1_mauvais_mdp.png")
+    A.fill("input[aria-label=\"Mot de passe d'accès\"]", PW)
+    A.click("text=C'est parti")
+    expect(A.locator(".top-title")).to_have_text("Mes potes")
+    A.click("text=Créer une bande"); A.fill("input[aria-label='Nom de la bande']", "Les chefs"); A.click("text=Créer la bande")
+    code = A.locator(".big-code").inner_text().strip()
+    expect(A.get_by_text("Donne-le à part")).to_be_visible()
+    A.click(".sheet .x"); A.wait_for_timeout(400)
+    B.goto(BASE + "?bande=" + code)
+    B.fill("input[aria-label='Ton surnom']", "Intrus")
+    B.fill("input[aria-label=\"Mot de passe d'accès\"]", PW)
+    B.click("text=C'est parti")
+    expect(B.locator(".band h2")).to_have_text("Les chefs")
+    A.reload(); A.wait_for_selector(".band")
+    A.click("text=Gérer")
+    A.screenshot(path="/tmp/shots/s2_gerer.png")
+    A.once("dialog", lambda d: d.accept())
+    A.get_by_role("button", name="Exclure").click()
+    expect(A.locator(".toast")).to_contain_text("exclu")
+    B.reload(); B.wait_for_selector(".top-title")
+    expect(B.locator(".empty h2")).to_have_text("Monte ta bande")
+    # changer le code : l'ancien ne marche plus
+    A.click("text=Gérer")
+    A.once("dialog", lambda d: d.accept())
+    A.get_by_role("button", name="Changer le code d'invitation").click()
+    expect(A.locator(".big-code")).to_be_visible()
+    new = A.locator(".big-code").inner_text().strip()
+    assert new != code, "code inchangé"
+    B.click("text=J'ai un code"); B.fill("input[aria-label='Code de la bande']", code); B.get_by_role("button", name="Rejoindre", exact=True).click()
+    expect(B.locator(".toast")).to_contain_text("aucune bande")
+    print("ancien code", code, "nouveau", new)
+    b.close()
+print("ERREURS:", errors or "aucune")

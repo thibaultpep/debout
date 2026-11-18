@@ -21,9 +21,17 @@ C'est une appli web installable (PWA). Elle marche pareil sur iPhone et sur Andr
 - `index.html`, `css/`, `js/` : l'appli, en JavaScript sans framework ni étape de build.
 - `sw.js` : le service worker (cache hors ligne et notifications).
 - `sounds/` : les sons, tous synthétisés par `tools/gen_sounds.py`.
-- `supabase/schema.sql` : la base et l'API (fonctions RPC). Chaque joueur a un jeton secret stocké sur son téléphone.
+- `supabase/schema.sql` puis `supabase/security.sql` : la base et l'API (fonctions RPC). Chaque joueur a un jeton secret stocké sur son téléphone.
 - `supabase/functions/push-tick` : la fonction qui envoie les notifications, appelée chaque minute par `supabase/cron.sql`.
 - `tools/devserver.js` + `tools/e2e.py` : le serveur local et le test de bout en bout.
+
+## Sécurité
+
+- Pour créer un compte, il faut le **mot de passe d'accès** commun. Il n'est pas dans ce dépôt : seule son empreinte bcrypt est stockée dans la base.
+- Les essais sont limités : 8 mots de passe ratés par heure et par connexion, 10 codes de bande ratés par heure et par compte.
+- Les tables ne sont pas accessibles directement. Tout passe par des fonctions qui vérifient le jeton secret du joueur et son appartenance à la bande.
+- Le créateur d'une bande peut exclure un membre et changer le code d'invitation.
+- Les clés des notifications et le secret du relais sont stockés dans la base, pas dans le code.
 
 ## Hébergement
 

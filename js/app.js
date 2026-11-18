@@ -260,6 +260,7 @@ function renderOnboarding() {
   let emoji = AVATARS[Math.floor(Math.random() * AVATARS.length)];
   const invite = store.get('invite');
   const pseudo = h('input', { class: 'field', maxlength: 24, placeholder: 'Ton surnom', autocomplete: 'nickname', 'aria-label': 'Ton surnom' });
+  const pass = h('input', { class: 'field', type: 'password', placeholder: 'Mot de passe d\'accès', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': 'Mot de passe d\'accès' });
   const grid = h('div', { class: 'avatars' }, AVATARS.map((a) => h('button', {
     type: 'button', class: `avatar-pick${a === emoji ? ' on' : ''}`, 'aria-label': `Avatar ${a}`,
     onclick: (e) => { emoji = a; grid.querySelectorAll('.on').forEach((x) => x.classList.remove('on')); e.currentTarget.classList.add('on'); },
@@ -271,17 +272,21 @@ function renderOnboarding() {
       e.preventDefault();
       const p = pseudo.value.trim();
       if (!p) { pseudo.focus(); toast('Choisis un surnom pour que tes potes te reconnaissent', 'err'); return; }
+      if (!pass.value.trim()) { pass.focus(); toast('Il faut le mot de passe d\'accès. Demande-le au pote qui t\'a invité.', 'err'); return; }
       go.disabled = true;
       const tok = randomToken();
       try {
-        await api.register(tok, p, emoji);
+        await api.register(tok, p, emoji, pass.value.trim());
         store.set('token', tok);
         S.tab = 'potes';
         await startSession();
       } catch (err) { toast(err.message, 'err'); go.disabled = false; }
     },
   }, h('label', { class: 'lbl' }, 'Comment tes potes t\'appellent ?'), pseudo,
-  h('label', { class: 'lbl' }, 'Ta tête au réveil'), grid, go);
+  h('label', { class: 'lbl' }, 'Ta tête au réveil'), grid,
+  h('label', { class: 'lbl' }, 'Mot de passe d\'accès'), pass,
+  h('p', { class: 'hint' }, 'Debout ! est réservé à notre bande. Le pote qui t\'a invité te donne le mot de passe.'),
+  go);
 
   app.replaceChildren(h('main', { class: 'onb' },
     h('div', { class: 'onb-hero' },
@@ -379,7 +384,9 @@ function viewPotes() {
     out.push(h('section', { class: 'band' },
       h('div', { class: 'band-head' },
         h('h2', {}, b.name),
-        h('button', { class: 'btn btn-small', onclick: () => sheetInvite(b) }, 'Inviter')),
+        h('div', { class: 'band-btns' },
+          b.owner_id === st.me.id ? h('button', { class: 'btn btn-small', onclick: () => sheetManage(b) }, 'Gérer') : null,
+          h('button', { class: 'btn btn-small', onclick: () => sheetInvite(b) }, 'Inviter'))),
       b.members.length === 1 ? h('p', { class: 'hint' }, 'Tu es seul ici pour l\'instant. Invite tes potes avec le bouton au-dessus.') : null,
       h('ul', { class: 'members' }, b.members.map((m) => memberRow(m)))));
   }
@@ -728,11 +735,36 @@ function sheetInvite(b) {
   const text = `Rejoins ma bande « ${b.name} » sur Debout ! On se piège nos réveils entre potes 😈`;
   openSheet(`Inviter dans ${b.name}`, h('div', { class: 'stack' },
     h('p', {}, 'Envoie ce lien à tes potes (WhatsApp, SMS…). Ils l\'ouvrent, choisissent un surnom, et ils sont dans la bande. Ça marche sur iPhone comme sur Android.'),
+    h('p', { class: 'hint' }, 'Ils auront aussi besoin du mot de passe d\'accès. Donne-le à part, pas dans le même message que le lien.'),
     h('p', { class: 'big-code', 'aria-label': `Code ${b.code.split('').join(' ')}` }, b.code),
     navigator.share
       ? h('button', { class: 'btn btn-main btn-block', onclick: () => navigator.share({ title: 'Debout !', text, url: link }).catch(() => {}) }, 'Partager le lien')
       : null,
     h('button', { class: 'btn btn-block', onclick: () => copy(`${text}\n${link}`, 'Lien copié') }, 'Copier le lien'),
+  ));
+}
+
+function sheetManage(b) {
+  const others = b.members.filter((m) => m.id !== S.state.me.id);
+  const s = openSheet(`Gérer ${b.name}`, h('div', { class: 'stack' },
+    h('p', { class: 'hint' }, 'Tu as créé cette bande : tu peux exclure quelqu\'un et changer le code d\'invitation.'),
+    others.length ? h('ul', { class: 'members' }, others.map((m) => h('li', { class: 'member' },
+      h('span', { class: 'av small' }, m.emoji),
+      h('div', { class: 'member-txt' }, h('p', { class: 'member-name' }, m.pseudo)),
+      h('button', {
+        class: 'btn btn-small', onclick: async () => {
+          if (!confirm(`Exclure ${m.pseudo} de « ${b.name} » ? Ses pièges en attente seront annulés.`)) return;
+          try { await api.kick(b.id, m.id); toast(`${m.pseudo} a été exclu`); s.close(); await refresh(); } catch (e) { toast(e.message, 'err'); }
+        },
+      }, 'Exclure')))) : h('p', {}, 'Personne d\'autre dans la bande pour l\'instant.'),
+    h('h3', { class: 'lbl' }, 'Code d\'invitation'),
+    h('p', { class: 'hint' }, `Code actuel : ${b.code}. Si le lien a circulé trop loin, change-le : l'ancien lien ne marchera plus. Les membres actuels restent dans la bande.`),
+    h('button', {
+      class: 'btn btn-block', onclick: async () => {
+        if (!confirm('Changer le code d\'invitation ? L\'ancien lien ne marchera plus.')) return;
+        try { const nb = await api.newCode(b.id); s.close(); await refresh(); sheetInvite({ ...b, code: nb.code }); } catch (e) { toast(e.message, 'err'); }
+      },
+    }, 'Changer le code d\'invitation'),
   ));
 }
 

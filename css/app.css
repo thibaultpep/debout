@@ -153,6 +153,7 @@ textarea.field { resize: none; }
 .band { background: var(--paper); border: var(--line); border-radius: 22px; padding: 16px 16px 6px; }
 .band-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
 .band-head h2 { font: 400 23px/1.1 var(--display); }
+.band-btns { display: flex; gap: 8px; }
 .members li + li, .traps li + li, .events li + li { border-top: 1.5px dashed rgba(29, 43, 83, .25); }
 .member, .trap, .ev { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
 .av {
