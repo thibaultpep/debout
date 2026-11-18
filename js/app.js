@@ -1010,7 +1010,8 @@ async function enterSleep() {
   await unlockAudio({ keep: true });
   sleepHow = await keepScreenOn();
   S.sleeping = true;
-  document.body.classList.add('no-scroll');
+  document.body.classList.add('no-scroll', 'is-sleeping');
+  setThemeColor('#1b1846');
   renderSleep();
   preloadSounds(['classique', ...nextOccs().slice(0, 4).map((o) => o.sound)]);
   prefetchVoices();
@@ -1022,8 +1023,14 @@ function exitSleep() {
   stopRinging();
   sleepEl?.remove();
   sleepEl = null;
-  document.body.classList.remove('no-scroll');
+  document.body.classList.remove('no-scroll', 'is-sleeping');
+  setThemeColor('#8fd3ff');
   render();
+}
+
+// couleur des barres du téléphone (heure, batterie) : nuit en mode dodo
+function setThemeColor(c) {
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', c);
 }
 
 function renderSleep() {

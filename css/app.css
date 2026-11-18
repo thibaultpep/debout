@@ -31,6 +31,7 @@ body {
   overscroll-behavior-y: none;
 }
 body.no-scroll { overflow: hidden; }
+body.is-sleeping { background: var(--night); }
 h1, h2, h3, p { margin: 0; }
 button { font: inherit; color: inherit; }
 ul, ol { margin: 0; padding: 0; }
