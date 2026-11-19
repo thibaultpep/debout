@@ -93,4 +93,5 @@ export const api = {
   savePush: (sub) => rpc('save_push_sub', { p_endpoint: sub.endpoint, p_p256dh: sub.keys.p256dh, p_auth: sub.keys.auth }),
   deletePush: (endpoint) => rpc('delete_push_sub', { p_endpoint: endpoint }),
   testPush: () => rpc('request_test_push'),
+  ackRing: (key) => rpc('ack_ring', { p_key: key }),
 };

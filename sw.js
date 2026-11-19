@@ -1,5 +1,5 @@
 // Debout ! — service worker : appli dispo hors ligne + notifications de réveil.
-const VERSION = 'debout-v8';
+const VERSION = 'debout-v9';
 const SOUNDS = ['classique', 'sirene', 'klaxon', 'fanfare', 'ecole', 'chiptune', 'recul', 'coucou', 'laser', 'sonar', 'gong',
   'carillon', 'decollage', 'disco', 'kazoo', 'alerte', 'stade', 'tambours', 'microondes', 'boite', 'silence'];
 const SHELL = [
@@ -50,7 +50,8 @@ self.addEventListener('push', (e) => {
     vibrate: [800, 300, 800, 300, 800, 300, 800],
     icon: 'icons/icon-192.png',
     badge: 'icons/badge-96.png',
-    data: { url: data.url || './', key: data.tag },
+    silent: false,
+    data: { url: data.url || './', key: data.key || data.tag },
   }));
 });
 

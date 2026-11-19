@@ -21,7 +21,7 @@ C'est une appli web installable (PWA). Elle marche pareil sur iPhone et sur Andr
 - `index.html`, `css/`, `js/` : l'appli, en JavaScript sans framework ni étape de build.
 - `sw.js` : le service worker (cache hors ligne et notifications).
 - `sounds/` : les sons, tous synthétisés par `tools/gen_sounds.py`.
-- `supabase/schema.sql` puis `supabase/security.sql` : la base et l'API (fonctions RPC). Chaque joueur a un jeton secret stocké sur son téléphone.
+- `supabase/schema.sql`, puis `supabase/security.sql` et `supabase/push_repeat.sql` : la base et l'API (fonctions RPC). Chaque joueur a un jeton secret stocké sur son téléphone.
 - `supabase/functions/push-tick` : la fonction qui envoie les notifications, appelée chaque minute par `supabase/cron.sql`.
 - `tools/devserver.js` + `tools/e2e.py` : le serveur local et le test de bout en bout.
 

@@ -187,6 +187,8 @@ async function loadVoices(ids = [], timeoutMs = 2500) {
 
 async function ring(occ, { needsTap = false } = {}) {
   let wokeUp = false;
+  // l'appli est ouverte sur ce réveil : le serveur arrête les notifications de rappel
+  if (/^[aw]:/.test(occ.key)) api.ackRing(occ.key).catch(() => {});
   const voices = await loadVoices(occ.voiceIds);
   if (occ.kind === 'snooze') {
     store.set('snoozes', store.get('snoozes', []).filter((s) => s.key !== occ.key));
